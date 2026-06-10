@@ -82,30 +82,41 @@ def prepare_image(image):
 
 
 def classify_epicness(score):
-    if score >= 0.85:
+    if score >= 0.92:
         return (
             "🏆 LEGENDARY STACHE",
-            "The International Mustache Authority is impressed.",
+            "The International Mustache Authority is speechless.",
+            "assets/legendary.mp4"
+        )
+
+    elif score >= 0.80:
+        return (
+            "🔥 EPIC STACHE",
+            "Alert the International Mustache Authority immediately.",
             "assets/epic.mp4"
         )
+
     elif score >= 0.65:
         return (
             "🎩 Distinguished Gentleman",
             "A respectable upper-lip performance.",
             "assets/medium.mp4"
         )
+
     elif score >= 0.45:
         return (
             "🧔 Standard Issue Mustache",
             "Acceptable. Not historic.",
             "assets/medium.mp4"
         )
+
     elif score >= 0.25:
         return (
             "🌱 Apprentice Stache",
             "Mustache growth is currently in beta testing.",
-            "assets/medium.mp4"
+            "assets/apprentice.mp4"
         )
+
     else:
         return (
             "🪶 Fjunig Mustache",
