@@ -185,7 +185,7 @@ if uploaded_file is not None:
 
         st.write("mustache_prob:", mustache_prob)
 
-        if mustache_prob < 0.45:
+        if mustache_prob < 0.6:
             st.error("❌ NO CERTIFIED MUSTACHE DETECTED")
             st.write(
                 "Verdict: Upper lip currently operating "
