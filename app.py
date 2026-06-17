@@ -199,14 +199,7 @@ if uploaded_file is not None:
                 epic_model.predict(img_array, verbose=0)[0][0]
             )
 
-            epic_score_raw = 1 - thin_prob
-
-            if mustache_prob > 0.80:
-                boost = (mustache_prob - 0.80) / 0.20 * 0.12
-            else:
-                boost = 0
-
-            epic_score = min(1.0, epic_score_raw + boost)
+            epic_score = 1 - thin_prob
 
             st.write("thin_prob:", thin_prob)
             st.write("epic_score:", epic_score)
