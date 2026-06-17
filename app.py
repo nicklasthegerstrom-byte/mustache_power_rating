@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 from facenet_pytorch import MTCNN
 
-mtcnn = MTCNN(image_size=128, margin=40, post_process=False)
+mtcnn = MTCNN(image_size=178, margin=40, post_process=False)
 
 # --------------------------------------------------
 # Page config
@@ -39,7 +39,7 @@ mustache_model, epic_model = load_models()
 # Constants
 # --------------------------------------------------
 
-IMG_SIZE = (128, 128)
+IMG_SIZE = (178, 178)
 
 # --------------------------------------------------
 # Header
