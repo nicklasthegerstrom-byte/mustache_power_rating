@@ -71,10 +71,10 @@ def thin_prob_to_epic_score(thin_prob):
     x = np.log10(thin_prob)
 
     # Median från din referensdata: thin_prob ≈ 0.175
-    center = np.log10(0.175)
+    center = np.log10(0.10)
 
     # Högre = hårdare/mer polariserad skala
-    steepness = 1.2
+    steepness = 1.8
 
     score = 1 / (1 + np.exp(steepness * (x - center)))
 
