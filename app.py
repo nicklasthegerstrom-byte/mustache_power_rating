@@ -65,6 +65,21 @@ uploaded_file = st.file_uploader(
 # Helpers
 # --------------------------------------------------
 
+def thin_prob_to_epic_score(thin_prob):
+    thin_prob = max(float(thin_prob), 1e-15)
+
+    x = np.log10(thin_prob)
+
+    # Median från din referensdata: thin_prob ≈ 0.175
+    center = np.log10(0.175)
+
+    # Högre = hårdare/mer polariserad skala
+    steepness = 1.2
+
+    score = 1 / (1 + np.exp(steepness * (x - center)))
+
+    return float(np.clip(score, 0.0, 1.0))
+
 def prepare_image(image):
     image = image.convert("RGB")
 
@@ -199,7 +214,7 @@ if uploaded_file is not None:
                 epic_model.predict(img_array, verbose=0)[0][0]
             )
 
-            epic_score = 1 - thin_prob
+            epic_score = thin_prob_to_epic_score(thin_prob)
 
             st.write("thin_prob:", thin_prob)
             st.write("epic_score:", epic_score)
