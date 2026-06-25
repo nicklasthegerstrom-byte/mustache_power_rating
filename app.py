@@ -216,6 +216,7 @@ def classify_epicness(score):
 
 def _load_font(size):
     candidates = [
+        "assets/fonts/OpenSans-Bold.ttf",  # buntad med appen — funkar oavsett plattform
         "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
         "/System/Library/Fonts/Helvetica.ttc",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
