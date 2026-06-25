@@ -6,7 +6,7 @@ import torch
 import streamlit as st
 import tensorflow as tf
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 from facenet_pytorch import MTCNN, InceptionResnetV1
 
 mtcnn = MTCNN(image_size=178, margin=40, post_process=False)
@@ -352,6 +352,7 @@ def animate_scanner():
 if uploaded_file is not None:
 
     image = Image.open(uploaded_file)
+    image = ImageOps.exif_transpose(image)  # rättar telefonfoton som annars blir sidvända
 
     col1, col2 = st.columns([1, 1])
 
