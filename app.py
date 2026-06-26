@@ -162,17 +162,16 @@ def is_blocked(image, reference_embeddings, threshold=BLOCKLIST_THRESHOLD):
 
 
 def prepare_image(image):
+    """Returnerar None om inget ansikte hittas — ingen gissning på textur/bakgrund."""
     image = image.convert("RGB")
 
     face = mtcnn(image)
 
-    if face is not None:
-        # post_process=False → tensor i [0, 255] direkt
-        arr = face.permute(1, 2, 0).numpy().astype(np.uint8)
-    else:
-        # Fallback om inget ansikte hittas
-        arr = np.array(image.resize(IMG_SIZE))
+    if face is None:
+        return None
 
+    # post_process=False → tensor i [0, 255] direkt
+    arr = face.permute(1, 2, 0).numpy().astype(np.uint8)
     arr = np.expand_dims(arr, axis=0)
     return arr
 
@@ -192,14 +191,14 @@ def classify_epicness(score):
             "assets/abbe/legendarisk.mp4"
         )
 
-    elif score >= 50:
+    elif score >= 60:
         return (
             "🎩 Respektabel",
             "Godkänd. Inte historisk, men godkänd.",
             "assets/svenska/respektabel.mp4"
         )
 
-    elif score >= 25:
+    elif score >= 30:
         return (
             "🌱 Lovande",
             "Mustaschtillväxten befinner sig fortfarande i betatest.",
@@ -376,6 +375,14 @@ if uploaded_file is not None:
             st.stop()
 
         img_array = prepare_image(image)
+
+        if img_array is None:
+            st.error("❌ INGET ANSIKTE UPPTÄCKT")
+            st.write(
+                "Utlåtande: Specimen innehåller inget identifierbart "
+                "mänskligt ansikte och kan inte certifieras."
+            )
+            st.stop()
 
         animate_scanner()
 
