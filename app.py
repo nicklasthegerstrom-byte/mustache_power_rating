@@ -8,6 +8,9 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from facenet_pytorch import MTCNN, InceptionResnetV1
+from pillow_heif import register_heif_opener
+
+register_heif_opener()  # gör att Image.open() också klarar .heic (iPhone-kamerafoton)
 
 mtcnn = MTCNN(image_size=178, margin=40, post_process=False)
 
@@ -115,7 +118,7 @@ st.warning("🧪 TESTVERSION — 3-klassmodell (episk/respektabel/tunn)", icon="
 
 uploaded_file = st.file_uploader(
     "Skicka in provet för analys",
-    type=["jpg", "jpeg", "png"]
+    type=["jpg", "jpeg", "png", "heic", "heif"]
 )
 
 # --------------------------------------------------
@@ -207,7 +210,7 @@ def classify_epicness(score):
             "assets/abbe/legendarisk.mp4"
         )
 
-    elif score >= 85:
+    elif score >= 80:
         return (
             "🔥 Episk",
             "En mustasch av ovanligt hög kaliber.",
