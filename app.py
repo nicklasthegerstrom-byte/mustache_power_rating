@@ -437,8 +437,8 @@ if uploaded_file is not None:
                 "Utlåtande: Överläppen verkar för närvarande "
                 "sakna tillräcklig auktoritet."
             )
-            if os.path.exists("assets/svenska/ingen.mp4"):
-                st.video("assets/svenska/ingen.mp4")
+            if os.path.exists("assets/abbe/ingen.mp4"):
+                st.video("assets/abbe/ingen.mp4")
 
         else:
             preds = epic_model.predict(img_array, verbose=0)[0]
