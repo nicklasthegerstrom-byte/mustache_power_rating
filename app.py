@@ -17,7 +17,7 @@ mtcnn_face = MTCNN(image_size=160, margin=0, post_process=True)
 facenet = InceptionResnetV1(pretrained="vggface2").eval()
 
 BLOCKLIST_THRESHOLD = 0.65
-BLOCKLIST_DIR = "assets/blocklist_reference/hitler"
+BLOCKLIST_ROOT = "assets/blocklist_reference"
 
 # --------------------------------------------------
 # Page config
@@ -49,14 +49,29 @@ mustache_model, epic_model = load_models()
 
 @st.cache_resource
 def load_blocklist_embeddings():
-    """Bygger referensembeddings för blocklistan en gång vid appstart."""
-    all_paths = glob.glob(os.path.join(BLOCKLIST_DIR, "*.jpg")) + \
-                glob.glob(os.path.join(BLOCKLIST_DIR, "*.jpeg")) + \
-                glob.glob(os.path.join(BLOCKLIST_DIR, "*.png"))
+    """Bygger referensembeddings för blocklistan en gång vid appstart.
+
+    Skannar ALLA undermappar under BLOCKLIST_ROOT (en mapp per spärrad
+    person) — lägg bara till en ny mapp med referensbilder för att blockera
+    fler personer, ingen kodändring behövs.
+    """
+    if not os.path.isdir(BLOCKLIST_ROOT):
+        return []
+
+    all_paths = []
+    for person_dir in glob.glob(os.path.join(BLOCKLIST_ROOT, "*")):
+        if not os.path.isdir(person_dir):
+            continue
+        all_paths += glob.glob(os.path.join(person_dir, "*.jpg"))
+        all_paths += glob.glob(os.path.join(person_dir, "*.jpeg"))
+        all_paths += glob.glob(os.path.join(person_dir, "*.png"))
 
     embeddings = []
     for path in all_paths:
-        face = mtcnn_face(Image.open(path).convert("RGB"))
+        try:
+            face = mtcnn_face(Image.open(path).convert("RGB"))
+        except Exception:
+            continue
         if face is None:
             continue
         with torch.no_grad():
@@ -131,7 +146,15 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
             score *= 0.92  # generöst — appen ska vara kul att dela, inte sträng
     else:
         # Epic och medium är samma kontinuerliga skala — ingen kliff mellan dem.
-        score = p_epic * 100 + p_medium * 65 - p_thin * 100
+        # Thin straffar mot ett glidande "tak" (mellan 65 och 100) baserat på
+        # hur mycket av epic/medium-blandningen som faktiskt finns, istället
+        # för att alltid anta att motparten var en fullvärdig epic-claim.
+        epic_medium_sum = p_epic + p_medium
+        effective_anchor = (
+            (p_epic * 100 + p_medium * 65) / epic_medium_sum
+            if epic_medium_sum > 0 else 100
+        )
+        score = p_epic * 100 + p_medium * 65 - p_thin * effective_anchor
         if p_thin > 0.05:
             score *= 0.92
 
@@ -184,11 +207,11 @@ def classify_epicness(score):
             "assets/abbe/legendarisk.mp4"
         )
 
-    elif score >= 80:
+    elif score >= 85:
         return (
             "🔥 Episk",
             "En mustasch av ovanligt hög kaliber.",
-            "assets/abbe/legendarisk.mp4"
+            "assets/abbe/episk.mp4"
         )
 
     elif score >= 60:
@@ -277,7 +300,14 @@ TITLE_X, TITLE_Y, TITLE_W, TITLE_H = 110, 1125, 900, 130
 
 
 def create_share_image(photo, score, title, description="", template_path="assets/mall.png"):
-    """Klistrar in foto + poäng + titel + underrubrik i den färdigdesignade mallen."""
+    """Klistrar in foto + poäng + titel + underrubrik i den färdigdesignade mallen.
+
+    Returnerar None om mallen saknas, så anroparen kan visa ett snyggt
+    felmeddelande istället för att krascha hela appen.
+    """
+    if not os.path.exists(template_path):
+        return None
+
     template = Image.open(template_path).convert("RGBA")
     canvas = template.copy()
 
@@ -350,8 +380,12 @@ def animate_scanner():
 
 if uploaded_file is not None:
 
-    image = Image.open(uploaded_file)
-    image = ImageOps.exif_transpose(image)  # rättar telefonfoton som annars blir sidvända
+    try:
+        image = Image.open(uploaded_file)
+        image = ImageOps.exif_transpose(image)  # rättar telefonfoton som annars blir sidvända
+    except Exception:
+        st.error("❌ KUNDE INTE LÄSA FILEN — prova en annan bild (JPG/PNG).")
+        st.stop()
 
     col1, col2 = st.columns([1, 1])
 
@@ -427,20 +461,23 @@ if uploaded_file is not None:
 
             share_image = create_share_image(image, epic_score, title, description)
 
-            buf = io.BytesIO()
-            share_image.save(buf, format="PNG")
-            buf.seek(0)
+            if share_image is None:
+                st.warning("⚠️ Kunde inte generera delningsbild (mallen saknas) — resultatet ovan gäller fortfarande.")
+            else:
+                buf = io.BytesIO()
+                share_image.save(buf, format="PNG")
+                buf.seek(0)
 
-            img_col, _ = st.columns([3, 2])
-            with img_col:
-                st.image(share_image, use_container_width=True)
-                st.download_button(
-                    "⬇️ Ladda ner bild",
-                    data=buf,
-                    file_name="mustaschkraft.png",
-                    mime="image/png",
-                    use_container_width=True
-                )
+                img_col, _ = st.columns([3, 2])
+                with img_col:
+                    st.image(share_image, use_container_width=True)
+                    st.download_button(
+                        "⬇️ Ladda ner bild",
+                        data=buf,
+                        file_name="mustaschkraft.png",
+                        mime="image/png",
+                        use_container_width=True
+                    )
 
             st.divider()
             st.markdown(
