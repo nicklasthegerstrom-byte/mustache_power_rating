@@ -304,14 +304,19 @@ def _strip_emoji(text):
     return "".join(ch for ch in text if ch.isascii() or ch.isalpha()).strip()
 
 
-# Koordinater från mallen (assets/mall.png)
-PHOTO_X, PHOTO_Y, PHOTO_W, PHOTO_H = 150, 275, 810, 610
-SCORE_X, SCORE_Y, SCORE_W, SCORE_H = 150, 960, 810, 120
-TITLE_X, TITLE_Y, TITLE_W, TITLE_H = 110, 1125, 900, 130
+# Koordinater från mallen (assets/mall.png) — uppmätta mot 1228x1536,
+# men filen är faktiskt 1842x2304 (exakt 1.5x), så allt skalas upp x1.5.
+PHOTO_X, PHOTO_Y, PHOTO_W, PHOTO_H = 573, 681, 721, 735
+CLASS_X, CLASS_Y, CLASS_W, CLASS_H = 257, 1608, 647, 437
+STRENGTH_X, STRENGTH_Y, STRENGTH_W, STRENGTH_H = 971, 1607, 647, 437
+
+# Etiketterna "KLASS"/"MUSTACHSTYRKA" är inbrända högst upp i varje ruta —
+# värdet skrivs i den nedre delen så det inte överlappar etiketten.
+_LABEL_ZONE = 150
 
 
 def create_share_image(photo, score, title, description="", template_path="assets/mall.png"):
-    """Klistrar in foto + poäng + titel + underrubrik i den färdigdesignade mallen.
+    """Klistrar in foto + klass + poäng i den färdigdesignade mallen.
 
     Returnerar None om mallen saknas, så anroparen kan visa ett snyggt
     felmeddelande istället för att krascha hela appen.
@@ -328,30 +333,20 @@ def create_share_image(photo, score, title, description="", template_path="asset
 
     draw = ImageDraw.Draw(canvas)
 
-    score_font = _load_font(100)
-    title_font = _load_font(44)
-    description_font = _load_font(26)
+    score_font = _load_font(130)
+    title_font = _load_font(95)
 
-    # Skriv hela "XX / 100" centrerat i rutan (täcker mallens inbrända "____/100").
-    _draw_centered_text(
-        draw, f"{score:.0f} / 100",
-        (SCORE_X, SCORE_Y, SCORE_W, SCORE_H),
-        score_font, "#d4a843"
-    )
-
-    # Titel och underrubrik staplade i samma ruta — titel överst, beskrivning under.
     title_text = _strip_emoji(title)
-    desc_text = _strip_emoji(description)
 
     _draw_centered_text(
         draw, title_text,
-        (TITLE_X, TITLE_Y, TITLE_W, TITLE_H // 2 + 15),
-        title_font, "white"
+        (CLASS_X, CLASS_Y + _LABEL_ZONE, CLASS_W, CLASS_H - _LABEL_ZONE),
+        title_font, "#1c3f60"
     )
     _draw_centered_text(
-        draw, desc_text,
-        (TITLE_X, TITLE_Y + TITLE_H // 2 + 5, TITLE_W, TITLE_H // 2 - 5),
-        description_font, "#9fb3c8"
+        draw, f"{score:.0f} / 100",
+        (STRENGTH_X, STRENGTH_Y + _LABEL_ZONE - 15, STRENGTH_W, STRENGTH_H - _LABEL_ZONE),
+        score_font, "#1c3f60"
     )
 
     return canvas.convert("RGB")
@@ -395,11 +390,11 @@ if uploaded_file is not None:
         image = Image.open(uploaded_file)
         image = ImageOps.exif_transpose(image)  # rättar telefonfoton som annars blir sidvända
     except Exception as e:
-        print(f"[LOGG] Kunde inte öppna uppladdad fil: {e}")
+        print(f"[LOGG] Kunde inte öppna uppladdad fil: {e}", flush=True)
         st.error("❌ KUNDE INTE LÄSA FILEN — prova en annan bild (JPG/PNG).")
         st.stop()
 
-    print(f"[LOGG] Bild mottagen: {uploaded_file.name}, {uploaded_file.size} bytes, storlek {image.size}")
+    print(f"[LOGG] Bild mottagen: {uploaded_file.name}, {uploaded_file.size} bytes, storlek {image.size}", flush=True)
 
     with main_card:
         left_col, right_col = st.columns([1, 1])
@@ -416,10 +411,10 @@ if uploaded_file is not None:
         extra_area = st.empty()  # video/debug-info/footer, fylls efter analys
 
         if analyze:
-            print("[LOGG] Analys startad.")
+            print("[LOGG] Analys startad.", flush=True)
 
             blocked, block_similarity = is_blocked(image, blocklist_embeddings)
-            print(f"[LOGG] Blocklist-kontroll klar: blocked={blocked}, similarity={block_similarity:.3f}")
+            print(f"[LOGG] Blocklist-kontroll klar: blocked={blocked}, similarity={block_similarity:.3f}", flush=True)
 
             if blocked:
                 with right_slot.container():
@@ -431,7 +426,7 @@ if uploaded_file is not None:
                 st.stop()
 
             img_array = prepare_image(image)
-            print(f"[LOGG] Ansiktsdetektion (prepare_image) klar: {'ansikte hittat' if img_array is not None else 'INGET ansikte'}")
+            print(f"[LOGG] Ansiktsdetektion (prepare_image) klar: {'ansikte hittat' if img_array is not None else 'INGET ansikte'}", flush=True)
 
             if img_array is None:
                 with right_slot.container():
@@ -445,35 +440,35 @@ if uploaded_file is not None:
             with right_slot.container():
                 animate_scanner()
 
-            print("[LOGG] Kör mustache_model.predict...")
+            print("[LOGG] Kör mustache_model.predict...", flush=True)
             mustache_prob = float(
                 mustache_model.predict(img_array, verbose=0)[0][0]
             )
-            print(f"[LOGG] mustache_model klar: mustache_prob={mustache_prob:.4f}")
+            print(f"[LOGG] mustache_model klar: mustache_prob={mustache_prob:.4f}", flush=True)
 
             if mustache_prob < 0.4:
                 # Inget upptäckt mustasch — räknas som 0/100, inte ett avslag.
                 # Det är ändå ett ansikte, så det ska få en poäng som alla andra.
                 p_epic, p_medium, p_thin = 0.0, 0.0, 1.0
                 epic_score = 0.0
-                title, description, video_file = "🫥 Du har en överläpp", (
+                title, description, video_file = "🚫 Ingen mustasch", (
                     "Överläppen verkar för närvarande sakna "
                     "tillräcklig auktoritet."
                 ), "assets/abbe/ingen.mp4"
             else:
-                print("[LOGG] Kör epic_model.predict...")
+                print("[LOGG] Kör epic_model.predict...", flush=True)
                 preds = epic_model.predict(img_array, verbose=0)[0]
                 p_epic, p_medium, p_thin = float(preds[0]), float(preds[1]), float(preds[2])
-                print(f"[LOGG] epic_model klar: p_epic={p_epic:.4f}, p_medium={p_medium:.4f}, p_thin={p_thin:.4f}")
+                print(f"[LOGG] epic_model klar: p_epic={p_epic:.4f}, p_medium={p_medium:.4f}, p_thin={p_thin:.4f}", flush=True)
 
                 epic_score = weighted_epic_score(p_epic, p_medium, p_thin)
-                print(f"[LOGG] Poäng beräknad: {epic_score:.2f}")
+                print(f"[LOGG] Poäng beräknad: {epic_score:.2f}", flush=True)
 
                 title, description, video_file = classify_epicness(epic_score)
 
-            print("[LOGG] Genererar delningsbild...")
+            print("[LOGG] Genererar delningsbild...", flush=True)
             share_image = create_share_image(image, epic_score, title, description)
-            print(f"[LOGG] Delningsbild klar: {'OK' if share_image is not None else 'MISSLYCKADES'}")
+            print(f"[LOGG] Delningsbild klar: {'OK' if share_image is not None else 'MISSLYCKADES'}", flush=True)
 
             # VÄNSTER: bytut foto mot resultatbilden
             with left_slot.container():
@@ -523,4 +518,4 @@ if uploaded_file is not None:
                     unsafe_allow_html=True
                 )
 
-                print("[LOGG] Analys klar, resultat visat.")
+                print("[LOGG] Analys klar, resultat visat.", flush=True)
