@@ -165,7 +165,7 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
             (p_epic * 100 + p_medium * 65) / epic_medium_sum
             if epic_medium_sum > 0 else 100
         )
-        score = p_epic * 100 + p_medium * 65 - p_thin * effective_anchor * 0.5
+        score = (p_epic ** 2) * 100 + p_medium * 65 - p_thin * effective_anchor * 0.5
         if p_thin > 0.05:
             score *= 0.92
 
@@ -394,9 +394,12 @@ if uploaded_file is not None:
     try:
         image = Image.open(uploaded_file)
         image = ImageOps.exif_transpose(image)  # rättar telefonfoton som annars blir sidvända
-    except Exception:
+    except Exception as e:
+        print(f"[LOGG] Kunde inte öppna uppladdad fil: {e}")
         st.error("❌ KUNDE INTE LÄSA FILEN — prova en annan bild (JPG/PNG).")
         st.stop()
+
+    print(f"[LOGG] Bild mottagen: {uploaded_file.name}, {uploaded_file.size} bytes, storlek {image.size}")
 
     with main_card:
         left_col, right_col = st.columns([1, 1])
@@ -413,8 +416,10 @@ if uploaded_file is not None:
         extra_area = st.empty()  # video/debug-info/footer, fylls efter analys
 
         if analyze:
+            print("[LOGG] Analys startad.")
 
             blocked, block_similarity = is_blocked(image, blocklist_embeddings)
+            print(f"[LOGG] Blocklist-kontroll klar: blocked={blocked}, similarity={block_similarity:.3f}")
 
             if blocked:
                 with right_slot.container():
@@ -426,6 +431,7 @@ if uploaded_file is not None:
                 st.stop()
 
             img_array = prepare_image(image)
+            print(f"[LOGG] Ansiktsdetektion (prepare_image) klar: {'ansikte hittat' if img_array is not None else 'INGET ansikte'}")
 
             if img_array is None:
                 with right_slot.container():
@@ -439,9 +445,11 @@ if uploaded_file is not None:
             with right_slot.container():
                 animate_scanner()
 
+            print("[LOGG] Kör mustache_model.predict...")
             mustache_prob = float(
                 mustache_model.predict(img_array, verbose=0)[0][0]
             )
+            print(f"[LOGG] mustache_model klar: mustache_prob={mustache_prob:.4f}")
 
             if mustache_prob < 0.4:
                 with right_slot.container():
@@ -457,14 +465,19 @@ if uploaded_file is not None:
                         st.video("assets/abbe/ingen.mp4")
 
             else:
+                print("[LOGG] Kör epic_model.predict...")
                 preds = epic_model.predict(img_array, verbose=0)[0]
                 p_epic, p_medium, p_thin = float(preds[0]), float(preds[1]), float(preds[2])
+                print(f"[LOGG] epic_model klar: p_epic={p_epic:.4f}, p_medium={p_medium:.4f}, p_thin={p_thin:.4f}")
 
                 epic_score = weighted_epic_score(p_epic, p_medium, p_thin)
+                print(f"[LOGG] Poäng beräknad: {epic_score:.2f}")
 
                 title, description, video_file = classify_epicness(epic_score)
 
+                print("[LOGG] Genererar delningsbild...")
                 share_image = create_share_image(image, epic_score, title, description)
+                print(f"[LOGG] Delningsbild klar: {'OK' if share_image is not None else 'MISSLYCKADES'}")
 
                 # VÄNSTER: bytut foto mot resultatbilden
                 with left_slot.container():
@@ -513,3 +526,5 @@ if uploaded_file is not None:
                         "</p>",
                         unsafe_allow_html=True
                     )
+
+                print("[LOGG] Analys klar, resultat visat.")
