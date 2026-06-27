@@ -214,28 +214,28 @@ def classify_epicness(score):
     if score >= 95:
         return (
             "🏆 Legendarisk",
-            "Mustaschkampens experter är mållösa.",
+            "Mustaschkampens experter är mållösa. Mustaschen föreslås statligt kulturarvsskydd.",
             "assets/abbe/legendarisk.mp4"
         )
 
     elif score >= 80:
         return (
             "🔥 Episk",
-            "En mustasch av ovanligt hög kaliber.",
+            "En mustasch med styrka. Kraft. Själ.",
             "assets/abbe/episk.mp4"
         )
 
     elif score >= 60:
         return (
             "🎩 Respektabel",
-            "Godkänd. Inte historisk, men godkänd.",
+            "En värdig representant för svensk mustaschkultur.",
             "assets/abbe/respektabel.mp4"
         )
 
     elif score >= 30:
         return (
             "🌱 Lovande",
-            "Mustaschtillväxten befinner sig fortfarande i betatest.",
+            "Ett litet steg för överläppen. Ett stort steg för mänskligheten.",
             "assets/abbe/lovande.mp4"
         )
 
@@ -452,18 +452,14 @@ if uploaded_file is not None:
             print(f"[LOGG] mustache_model klar: mustache_prob={mustache_prob:.4f}")
 
             if mustache_prob < 0.4:
-                with right_slot.container():
-                    st.error("❌ INGEN CERTIFIERAD MUSTASCH UPPTÄCKT")
-                    st.write(
-                        "Utlåtande: Överläppen verkar för närvarande "
-                        "sakna tillräcklig auktoritet."
-                    )
-
-                with extra_area.container():
-                    st.write("mustasch_sannolikhet:", mustache_prob)
-                    if os.path.exists("assets/abbe/ingen.mp4"):
-                        st.video("assets/abbe/ingen.mp4")
-
+                # Inget upptäckt mustasch — räknas som 0/100, inte ett avslag.
+                # Det är ändå ett ansikte, så det ska få en poäng som alla andra.
+                p_epic, p_medium, p_thin = 0.0, 0.0, 1.0
+                epic_score = 0.0
+                title, description, video_file = "🫥 Du har en överläpp", (
+                    "Överläppen verkar för närvarande sakna "
+                    "tillräcklig auktoritet."
+                ), "assets/abbe/ingen.mp4"
             else:
                 print("[LOGG] Kör epic_model.predict...")
                 preds = epic_model.predict(img_array, verbose=0)[0]
@@ -475,56 +471,56 @@ if uploaded_file is not None:
 
                 title, description, video_file = classify_epicness(epic_score)
 
-                print("[LOGG] Genererar delningsbild...")
-                share_image = create_share_image(image, epic_score, title, description)
-                print(f"[LOGG] Delningsbild klar: {'OK' if share_image is not None else 'MISSLYCKADES'}")
+            print("[LOGG] Genererar delningsbild...")
+            share_image = create_share_image(image, epic_score, title, description)
+            print(f"[LOGG] Delningsbild klar: {'OK' if share_image is not None else 'MISSLYCKADES'}")
 
-                # VÄNSTER: bytut foto mot resultatbilden
-                with left_slot.container():
-                    if share_image is not None:
-                        st.image(share_image, width="stretch")
-                    else:
-                        st.warning("⚠️ Kunde inte generera delningsbild (mallen saknas).")
-                        st.image(image, caption="Inskickat prov", width="stretch")
+            # VÄNSTER: bytut foto mot resultatbilden
+            with left_slot.container():
+                if share_image is not None:
+                    st.image(share_image, width="stretch")
+                else:
+                    st.warning("⚠️ Kunde inte generera delningsbild (mallen saknas).")
+                    st.image(image, caption="Inskickat prov", width="stretch")
 
-                # HÖGER: byt ut knapp/mätare mot titel + nedladdning
-                with right_slot.container():
-                    st.subheader(title)
-                    st.write(description)
+            # HÖGER: byt ut knapp/mätare mot titel + nedladdning
+            with right_slot.container():
+                st.subheader(title)
+                st.write(description)
 
-                    if share_image is not None:
-                        buf = io.BytesIO()
-                        share_image.save(buf, format="PNG")
-                        buf.seek(0)
-                        st.download_button(
-                            "⬇️ Ladda ner bild",
-                            data=buf,
-                            file_name="mustaschkraft.png",
-                            mime="image/png",
-                            width="stretch",
-                            key="download_button"
-                        )
-
-                    if epic_score >= 95:
-                        st.balloons()
-
-                with extra_area.container():
-                    st.write("mustasch_sannolikhet:", mustache_prob)
-                    st.write("p_episk:", p_epic)
-                    st.write("p_respektabel:", p_medium)
-                    st.write("p_tunn:", p_thin)
-                    st.write("mustaschkraft_poäng:", epic_score)
-
-                    if video_file and os.path.exists(video_file):
-                        st.video(video_file)
-
-                    st.divider()
-                    st.markdown(
-                        "<p style='text-align: center; color: gray; font-size: 0.875rem;'>"
-                        "Resultat certifierat av "
-                        "Mustaschkampens legitimerade mustaschexperter™"
-                        "</p>",
-                        unsafe_allow_html=True
+                if share_image is not None:
+                    buf = io.BytesIO()
+                    share_image.save(buf, format="PNG")
+                    buf.seek(0)
+                    st.download_button(
+                        "⬇️ Ladda ner bild",
+                        data=buf,
+                        file_name="mustaschkraft.png",
+                        mime="image/png",
+                        width="stretch",
+                        key="download_button"
                     )
+
+                if epic_score >= 95:
+                    st.balloons()
+
+            with extra_area.container():
+                st.write("mustasch_sannolikhet:", mustache_prob)
+                st.write("p_episk:", p_epic)
+                st.write("p_respektabel:", p_medium)
+                st.write("p_tunn:", p_thin)
+                st.write("mustaschkraft_poäng:", epic_score)
+
+                if video_file and os.path.exists(video_file):
+                    st.video(video_file)
+
+                st.divider()
+                st.markdown(
+                    "<p style='text-align: center; color: gray; font-size: 0.875rem;'>"
+                    "Resultat certifierat av "
+                    "Mustaschkampens legitimerade mustaschexperter™"
+                    "</p>",
+                    unsafe_allow_html=True
+                )
 
                 print("[LOGG] Analys klar, resultat visat.")
