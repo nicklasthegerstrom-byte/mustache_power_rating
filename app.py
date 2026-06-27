@@ -165,7 +165,7 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
             (p_epic * 100 + p_medium * 65) / epic_medium_sum
             if epic_medium_sum > 0 else 100
         )
-        score = p_epic * 100 + p_medium * 65 - p_thin * effective_anchor
+        score = p_epic * 100 + p_medium * 65 - p_thin * effective_anchor * 0.5
         if p_thin > 0.05:
             score *= 0.92
 
@@ -229,7 +229,7 @@ def classify_epicness(score):
         return (
             "🎩 Respektabel",
             "Godkänd. Inte historisk, men godkänd.",
-            "assets/svenska/respektabel.mp4"
+            "assets/abbe/respektabel.mp4"
         )
 
     elif score >= 30:
@@ -243,7 +243,7 @@ def classify_epicness(score):
         return (
             "🪶 Fjunig",
             "Mustaschen existerar mest som ett teoretiskt koncept.",
-            "assets/fjunig.mp4"
+            "assets/abbe/fjunig.mp4"
         )
 
 
@@ -404,11 +404,11 @@ if uploaded_file is not None:
         right_slot = right_col.empty()
 
         with left_slot.container():
-            st.image(image, caption="Inskickat prov", use_container_width=True)
+            st.image(image, caption="Inskickat prov", width="stretch")
 
         with right_slot.container():
             st.markdown("<br><br>", unsafe_allow_html=True)
-            analyze = st.button("🔬 Starta analys", use_container_width=True, key="analyze_button")
+            analyze = st.button("🔬 Starta analys", width="stretch", key="analyze_button")
 
         extra_area = st.empty()  # video/debug-info/footer, fylls efter analys
 
@@ -469,10 +469,10 @@ if uploaded_file is not None:
                 # VÄNSTER: bytut foto mot resultatbilden
                 with left_slot.container():
                     if share_image is not None:
-                        st.image(share_image, use_container_width=True)
+                        st.image(share_image, width="stretch")
                     else:
                         st.warning("⚠️ Kunde inte generera delningsbild (mallen saknas).")
-                        st.image(image, caption="Inskickat prov", use_container_width=True)
+                        st.image(image, caption="Inskickat prov", width="stretch")
 
                 # HÖGER: byt ut knapp/mätare mot titel + nedladdning
                 with right_slot.container():
@@ -488,7 +488,7 @@ if uploaded_file is not None:
                             data=buf,
                             file_name="mustaschkraft.png",
                             mime="image/png",
-                            use_container_width=True,
+                            width="stretch",
                             key="download_button"
                         )
 
