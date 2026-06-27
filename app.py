@@ -214,7 +214,7 @@ def classify_epicness(score):
     if score >= 95:
         return (
             "🏆 Legendarisk",
-            "Mustaschkampens experter är mållösa. Mustaschen föreslås statligt kulturarvsskydd.",
+            "Våra experter är mållösa. Mustaschen föreslås statligt kulturarvsskydd.",
             "assets/abbe/legendarisk.mp4"
         )
 
@@ -243,7 +243,7 @@ def classify_epicness(score):
         return (
             "🪶 Fjunig",
             "Mustaschen existerar mest som ett teoretiskt koncept.",
-            "assets/abbe/fjunig.mp4"
+            "assets/abbe/lovande.mp4"
         )
 
 
