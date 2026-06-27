@@ -32,6 +32,9 @@ st.set_page_config(
     layout="centered"
 )
 
+with open("styles.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 # --------------------------------------------------
 # Load models
 # --------------------------------------------------
@@ -100,7 +103,9 @@ IMG_SIZE = (178, 178)
 # Header
 # --------------------------------------------------
 
-st.image("assets/abbe/logo.png", use_container_width=True)
+_, logo_col, _ = st.columns([1, 2, 1])
+with logo_col:
+    st.image("assets/abbe/logo.png", width=600)
 
 st.markdown(
     "<p style='text-align: center; color: gray; font-size: 0.875rem;'>"
@@ -116,10 +121,12 @@ st.warning("🧪 TESTVERSION — 3-klassmodell (episk/respektabel/tunn)", icon="
 # Upload
 # --------------------------------------------------
 
-uploaded_file = st.file_uploader(
-    "Skicka in provet för analys",
-    type=["jpg", "jpeg", "png", "heic", "heif"]
-)
+main_card = st.container(border=True, key="main_card")
+with main_card:
+    uploaded_file = st.file_uploader(
+        "Skicka in provet för analys",
+        type=["jpg", "jpeg", "png", "heic", "heif"]
+    )
 
 # --------------------------------------------------
 # Helpers
@@ -390,103 +397,117 @@ if uploaded_file is not None:
         st.error("❌ KUNDE INTE LÄSA FILEN — prova en annan bild (JPG/PNG).")
         st.stop()
 
-    col1, col2 = st.columns([1, 1])
+    with main_card:
+        left_col, right_col = st.columns([1, 1])
+        left_slot = left_col.empty()
+        right_slot = right_col.empty()
 
-    with col1:
-        st.image(image, caption="Inskickat prov", use_container_width=True)
+        with left_slot.container():
+            st.image(image, caption="Inskickat prov", use_container_width=True)
 
-    with col2:
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        analyze = st.button("🔬 Starta analys", use_container_width=True)
+        with right_slot.container():
+            st.markdown("<br><br>", unsafe_allow_html=True)
+            analyze = st.button("🔬 Starta analys", use_container_width=True)
 
-    if analyze:
+        extra_area = st.empty()  # video/debug-info/footer, fylls efter analys
 
-        blocked, block_similarity = is_blocked(image, blocklist_embeddings)
+        if analyze:
 
-        if blocked:
-            st.error("❌ DEN HÄR PERSONEN KAN INTE ANALYSERAS")
-            st.write(
-                "Utlåtande: Specimen matchar en spärrad profil och "
-                "nekas certifiering."
+            blocked, block_similarity = is_blocked(image, blocklist_embeddings)
+
+            if blocked:
+                with right_slot.container():
+                    st.error("❌ DEN HÄR PERSONEN KAN INTE ANALYSERAS")
+                    st.write(
+                        "Utlåtande: Specimen matchar en spärrad profil och "
+                        "nekas certifiering."
+                    )
+                st.stop()
+
+            img_array = prepare_image(image)
+
+            if img_array is None:
+                with right_slot.container():
+                    st.error("❌ INGET ANSIKTE UPPTÄCKT")
+                    st.write(
+                        "Utlåtande: Specimen innehåller inget identifierbart "
+                        "mänskligt ansikte och kan inte certifieras."
+                    )
+                st.stop()
+
+            with right_slot.container():
+                animate_scanner()
+
+            mustache_prob = float(
+                mustache_model.predict(img_array, verbose=0)[0][0]
             )
-            st.stop()
 
-        img_array = prepare_image(image)
-
-        if img_array is None:
-            st.error("❌ INGET ANSIKTE UPPTÄCKT")
-            st.write(
-                "Utlåtande: Specimen innehåller inget identifierbart "
-                "mänskligt ansikte och kan inte certifieras."
-            )
-            st.stop()
-
-        animate_scanner()
-
-        mustache_prob = float(
-            mustache_model.predict(img_array, verbose=0)[0][0]
-        )
-
-        st.markdown("---")
-
-        st.write("mustasch_sannolikhet:", mustache_prob)
-
-        if mustache_prob < 0.4:
-            st.error("❌ INGEN CERTIFIERAD MUSTASCH UPPTÄCKT")
-            st.write(
-                "Utlåtande: Överläppen verkar för närvarande "
-                "sakna tillräcklig auktoritet."
-            )
-            if os.path.exists("assets/abbe/ingen.mp4"):
-                st.video("assets/abbe/ingen.mp4")
-
-        else:
-            preds = epic_model.predict(img_array, verbose=0)[0]
-            p_epic, p_medium, p_thin = float(preds[0]), float(preds[1]), float(preds[2])
-
-            epic_score = weighted_epic_score(p_epic, p_medium, p_thin)
-
-            st.write("p_episk:", p_epic)
-            st.write("p_respektabel:", p_medium)
-            st.write("p_tunn:", p_thin)
-            st.write("mustaschkraft_poäng:", epic_score)
-
-            title, description, video_file = classify_epicness(epic_score)
-
-            # Video överst om det finns en
-            if video_file and os.path.exists(video_file):
-                st.video(video_file)
-
-            if epic_score >= 95:
-                st.balloons()
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            share_image = create_share_image(image, epic_score, title, description)
-
-            if share_image is None:
-                st.warning("⚠️ Kunde inte generera delningsbild (mallen saknas) — resultatet ovan gäller fortfarande.")
-            else:
-                buf = io.BytesIO()
-                share_image.save(buf, format="PNG")
-                buf.seek(0)
-
-                img_col, _ = st.columns([3, 2])
-                with img_col:
-                    st.image(share_image, use_container_width=True)
-                    st.download_button(
-                        "⬇️ Ladda ner bild",
-                        data=buf,
-                        file_name="mustaschkraft.png",
-                        mime="image/png",
-                        use_container_width=True
+            if mustache_prob < 0.4:
+                with right_slot.container():
+                    st.error("❌ INGEN CERTIFIERAD MUSTASCH UPPTÄCKT")
+                    st.write(
+                        "Utlåtande: Överläppen verkar för närvarande "
+                        "sakna tillräcklig auktoritet."
                     )
 
-            st.divider()
-            st.markdown(
-                "<p style='text-align: center; color: gray; font-size: 0.875rem;'>"
-                "Resultat certifierat av "
-                "Mustaschkampens legitimerade mustaschexperter™"
-                "</p>",
-                unsafe_allow_html=True
-            )
+                with extra_area.container():
+                    st.write("mustasch_sannolikhet:", mustache_prob)
+                    if os.path.exists("assets/abbe/ingen.mp4"):
+                        st.video("assets/abbe/ingen.mp4")
+
+            else:
+                preds = epic_model.predict(img_array, verbose=0)[0]
+                p_epic, p_medium, p_thin = float(preds[0]), float(preds[1]), float(preds[2])
+
+                epic_score = weighted_epic_score(p_epic, p_medium, p_thin)
+
+                title, description, video_file = classify_epicness(epic_score)
+
+                share_image = create_share_image(image, epic_score, title, description)
+
+                # VÄNSTER: bytut foto mot resultatbilden
+                with left_slot.container():
+                    if share_image is not None:
+                        st.image(share_image, use_container_width=True)
+                    else:
+                        st.warning("⚠️ Kunde inte generera delningsbild (mallen saknas).")
+                        st.image(image, caption="Inskickat prov", use_container_width=True)
+
+                # HÖGER: byt ut knapp/mätare mot titel + nedladdning
+                with right_slot.container():
+                    st.subheader(title)
+                    st.write(description)
+
+                    if share_image is not None:
+                        buf = io.BytesIO()
+                        share_image.save(buf, format="PNG")
+                        buf.seek(0)
+                        st.download_button(
+                            "⬇️ Ladda ner bild",
+                            data=buf,
+                            file_name="mustaschkraft.png",
+                            mime="image/png",
+                            use_container_width=True
+                        )
+
+                    if epic_score >= 95:
+                        st.balloons()
+
+                with extra_area.container():
+                    st.write("mustasch_sannolikhet:", mustache_prob)
+                    st.write("p_episk:", p_epic)
+                    st.write("p_respektabel:", p_medium)
+                    st.write("p_tunn:", p_thin)
+                    st.write("mustaschkraft_poäng:", epic_score)
+
+                    if video_file and os.path.exists(video_file):
+                        st.video(video_file)
+
+                    st.divider()
+                    st.markdown(
+                        "<p style='text-align: center; color: gray; font-size: 0.875rem;'>"
+                        "Resultat certifierat av "
+                        "Mustaschkampens legitimerade mustaschexperter™"
+                        "</p>",
+                        unsafe_allow_html=True
+                    )
