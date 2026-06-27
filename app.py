@@ -232,7 +232,7 @@ def classify_epicness(score):
             "assets/abbe/respektabel.mp4"
         )
 
-    elif score >= 30:
+    elif score >= 25:
         return (
             "🌱 Lovande",
             "Ett litet steg för överläppen. Ett stort steg för mänskligheten.",
