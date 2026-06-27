@@ -125,7 +125,8 @@ main_card = st.container(border=True, key="main_card")
 with main_card:
     uploaded_file = st.file_uploader(
         "Skicka in provet för analys",
-        type=["jpg", "jpeg", "png", "heic", "heif"]
+        type=["jpg", "jpeg", "png", "heic", "heif"],
+        key="file_uploader"
     )
 
 # --------------------------------------------------
@@ -407,7 +408,7 @@ if uploaded_file is not None:
 
         with right_slot.container():
             st.markdown("<br><br>", unsafe_allow_html=True)
-            analyze = st.button("🔬 Starta analys", use_container_width=True)
+            analyze = st.button("🔬 Starta analys", use_container_width=True, key="analyze_button")
 
         extra_area = st.empty()  # video/debug-info/footer, fylls efter analys
 
@@ -487,7 +488,8 @@ if uploaded_file is not None:
                             data=buf,
                             file_name="mustaschkraft.png",
                             mime="image/png",
-                            use_container_width=True
+                            use_container_width=True,
+                            key="download_button"
                         )
 
                     if epic_score >= 95:
