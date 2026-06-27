@@ -1,0 +1,21 @@
+/* Mustaschkraft — svart/vit/guld-tema */
+
+[data-testid="stAppViewContainer"],
+[data-testid="stHeader"],
+[data-testid="stMain"] {
+    background-color: #0d0d0d;
+}
+
+/* Riktar mot den namngivna containern via st.container(key="main_card") —
+   genererar klassen .st-key-main_card, stabilt oavsett Streamlit-version. */
+.st-key-main_card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    padding: 24px;
+    border: none;
+}
+
+.st-key-main_card * {
+    color: #1a1a1a;
+}
