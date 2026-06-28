@@ -511,9 +511,6 @@ if uploaded_file is not None:
                         key="download_button"
                     )
 
-                if epic_score >= 95:
-                    st.balloons()
-
             with extra_area.container():
                 st.write("mustasch_sannolikhet:", mustache_prob)
                 st.write("p_episk:", p_epic)
