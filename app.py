@@ -87,8 +87,6 @@ def load_blocklist_embeddings():
     return embeddings
 
 
-blocklist_embeddings = load_blocklist_embeddings()
-
 # Ordningen image_dataset_from_directory sorterar mappar alfabetiskt:
 # epic, medium, thin
 CLASS_NAMES = ["epic", "medium", "thin"]
@@ -116,6 +114,11 @@ st.markdown(
 )
 
 st.warning("🧪 TESTVERSION — 3-klassmodell (episk/respektabel/tunn)", icon="🧪")
+
+# Laddas (och cachas) först HÄR, efter headern, så headern hinner synas
+# innan kallstartspausen — istället för en blank sida.
+with st.spinner("🥸 Mustaschinstrument laddas..."):
+    blocklist_embeddings = load_blocklist_embeddings()
 
 # --------------------------------------------------
 # Upload
@@ -257,7 +260,7 @@ def classify_epicness(score):
         return (
             "🪶 Fjunig",
             "Mustaschen existerar mest som ett teoretiskt koncept.",
-            "assets/abbe/lovande.mp4"
+            "assets/abbe/fjunig.mp4"
         )
 
 
