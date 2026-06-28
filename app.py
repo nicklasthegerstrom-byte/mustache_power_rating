@@ -178,6 +178,20 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
     return float(np.clip(score, 0, 100))
 
 
+def compress_top_end(score, floor=90.0, new_floor=80.0, gamma=2.5):
+    """Mappar [floor, 100] till [new_floor, 100] med en potenskurva.
+
+    Bara score==100 (exakt 1.0/0.0/0.0, händer i praktiken vid float32-
+    underflow på extremt övertygande bilder) förblir 100 — allt annat i
+    intervallet pressas tydligt nedåt, så mindre klumpar sig i toppen.
+    """
+    if score < floor:
+        return score
+    frac = (score - floor) / (100.0 - floor)
+    curved = frac ** gamma
+    return new_floor + (100.0 - new_floor) * curved
+
+
 def is_blocked(image, reference_embeddings, threshold=BLOCKLIST_THRESHOLD):
     """Jämför ett uppladdat ansikte mot blocklistans referensembeddings."""
     face = mtcnn_face(image.convert("RGB"))
@@ -462,6 +476,7 @@ if uploaded_file is not None:
                 print(f"[LOGG] epic_model klar: p_epic={p_epic:.4f}, p_medium={p_medium:.4f}, p_thin={p_thin:.4f}", flush=True)
 
                 epic_score = weighted_epic_score(p_epic, p_medium, p_thin)
+                epic_score = compress_top_end(epic_score)
                 print(f"[LOGG] Poäng beräknad: {epic_score:.2f}", flush=True)
 
                 title, description, video_file = classify_epicness(epic_score)
