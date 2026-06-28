@@ -45,7 +45,7 @@ def load_models():
         "models/mustache_detector_3.keras"
     )
     epic_model = tf.keras.models.load_model(
-        "models/epic_detector.keras"
+        "models/epic_detector_3class_3.keras"
     )
     return mustache_model, epic_model
 
@@ -451,7 +451,7 @@ if uploaded_file is not None:
                 # Det är ändå ett ansikte, så det ska få en poäng som alla andra.
                 p_epic, p_medium, p_thin = 0.0, 0.0, 1.0
                 epic_score = 0.0
-                title, description, video_file = "🚫 Ingen mustasch", (
+                title, description, video_file = "🚫 Mustaschlös", (
                     "Överläppen verkar för närvarande sakna "
                     "tillräcklig auktoritet."
                 ), "assets/abbe/ingen.mp4"
