@@ -105,13 +105,6 @@ _, logo_col, _ = st.columns([1, 2, 1])
 with logo_col:
     st.image("assets/abbe/logo.png", width=600)
 
-st.markdown(
-    "<p style='text-align: center; color: gray; font-size: 0.875rem;'>"
-    "Officiell ansiktshårsbedömning "
-    "av Mustaschkampens legitimerade mustaschexperter"
-    "</p>",
-    unsafe_allow_html=True
-)
 
 st.warning("🧪 TESTVERSION — 3-klassmodell (episk/respektabel/tunn)", icon="🧪")
 
