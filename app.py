@@ -225,35 +225,35 @@ def classify_epicness(score):
         return (
             "🏆 Legendarisk",
             "Våra experter är mållösa. Mustaschen föreslås statligt kulturarvsskydd.",
-            "assets/abbe/legendarisk.mp4"
+            "assets/abbe/video/legendarisk.mp4"
         )
 
     elif score >= 80:
         return (
             "🔥 Episk",
             "En mustasch med styrka. Kraft. Själ.",
-            "assets/abbe/episk.mp4"
+            "assets/abbe/video/episk.mp4"
         )
 
     elif score >= 60:
         return (
             "🎩 Respektabel",
             "En värdig representant för svensk mustaschkultur.",
-            "assets/abbe/respektabel.mp4"
+            "assets/abbe/video/respektabel.mp4"
         )
 
     elif score >= 25:
         return (
             "🌱 Lovande",
             "Ett litet steg för överläppen. Ett stort steg för mänskligheten.",
-            "assets/abbe/lovande.mp4"
+            "assets/abbe/video/lovande.mp4"
         )
 
     else:
         return (
             "🪶 Fjunig",
             "Mustaschen existerar mest som ett teoretiskt koncept.",
-            "assets/abbe/fjunig.mp4"
+            "assets/abbe/video/fjunig.mp4"
         )
 
 
@@ -464,7 +464,7 @@ if uploaded_file is not None:
                 title, description, video_file = "🚫 Mustaschlös", (
                     "Överläppen verkar för närvarande sakna "
                     "tillräcklig auktoritet."
-                ), "assets/abbe/ingen.mp4"
+                ), "assets/abbe/video/ingen.mp4"
             else:
                 print("[LOGG] Kör epic_model.predict...", flush=True)
                 preds = epic_model.predict(img_array, verbose=0)[0]
