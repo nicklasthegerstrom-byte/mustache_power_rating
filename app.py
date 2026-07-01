@@ -45,7 +45,7 @@ def load_models():
         "models/mustache_detector_3.keras"
     )
     epic_model = tf.keras.models.load_model(
-        "models/epic_detector.keras"
+        "models/epic_detector_3class_test.keras"
     )
     return mustache_model, epic_model
 
@@ -158,10 +158,10 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
         # för att alltid anta att motparten var en fullvärdig epic-claim.
         epic_medium_sum = p_epic + p_medium
         effective_anchor = (
-            (p_epic * 100 + p_medium * 65) / epic_medium_sum
+            (p_epic * 100 + p_medium * 75) / epic_medium_sum
             if epic_medium_sum > 0 else 100
         )
-        score = (p_epic ** 2) * 100 + p_medium * 65 - p_thin * effective_anchor * 0.5
+        score = (p_epic ** 1.1) * 100 + p_medium * 75 - p_thin * effective_anchor * 0.5
         if p_thin > 0.05:
             score *= 0.92
 
@@ -174,7 +174,7 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
     return float(np.clip(score, 0, 100))
 
 
-def compress_top_end(score, floor=90.0, new_floor=80.0, gamma=2.5):
+def compress_top_end(score, floor=95.0, new_floor=85.0, gamma=2.5):
     """Mappar [floor, 100] till [new_floor, 100] med en potenskurva.
 
     Bara score==100 (exakt 1.0/0.0/0.0, händer i praktiken vid float32-
@@ -471,7 +471,15 @@ if uploaded_file is not None:
                 p_epic, p_medium, p_thin = float(preds[0]), float(preds[1]), float(preds[2])
                 print(f"[LOGG] epic_model klar: p_epic={p_epic:.4f}, p_medium={p_medium:.4f}, p_thin={p_thin:.4f}", flush=True)
 
-                epic_score = weighted_epic_score(p_epic, p_medium, p_thin)
+                # 0.99+ räknas som "perfekt" vid POÄNGBERÄKNINGEN — annars krävs
+                # bokstavligt exakt 1.0, vilket en försiktigare modell sällan/
+                # aldrig ger. p_epic/p_medium/p_thin (visas i debug-panelen)
+                # förblir modellens riktiga, oklampade output.
+                epic_for_score, medium_for_score, thin_for_score = p_epic, p_medium, p_thin
+                if p_epic >= 0.99:
+                    epic_for_score, medium_for_score, thin_for_score = 1.0, 0.0, 0.0
+
+                epic_score = weighted_epic_score(epic_for_score, medium_for_score, thin_for_score)
                 epic_score = compress_top_end(epic_score)
                 print(f"[LOGG] Poäng beräknad: {epic_score:.2f}", flush=True)
 
