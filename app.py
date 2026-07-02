@@ -529,7 +529,7 @@ if uploaded_file is not None:
                     share_image.save(buf, format="PNG")
                     buf.seek(0)
                     st.download_button(
-                        "⬇️ Ladda ner bild",
+                        "⬇️ Ladda ner certifikat",
                         data=buf,
                         file_name="mustaschkraft.png",
                         mime="image/png",
