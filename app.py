@@ -259,7 +259,25 @@ def classify_epicness(score):
 
 def _load_font(size):
     candidates = [
-        "assets/fonts/Akzidenz-grotesk-black.ttf",  # buntad med appen — funkar oavsett plattform
+        "assets/fonts/FalstaffMTStd.otf",
+        "assets/fonts/Akzidenz-grotesk-black.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+        "/System/Library/Fonts/Helvetica.ttc",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            try:
+                return ImageFont.truetype(path, size)
+            except Exception:
+                continue
+    return ImageFont.load_default()
+
+
+def _load_title_font(size):
+    candidates = [
+        "assets/fonts/Gotham Medium.otf",
+        "assets/fonts/Akzidenz-grotesk-black.ttf",
         "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
         "/System/Library/Fonts/Helvetica.ttc",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -314,18 +332,29 @@ def _strip_emoji(text):
     return "".join(ch for ch in text if ch.isascii() or ch.isalpha()).strip()
 
 
-# Koordinater från mallen (assets/mall.png) — uppmätta mot 1228x1536,
-# men filen är faktiskt 1842x2304 (exakt 1.5x), så allt skalas upp x1.5.
-PHOTO_X, PHOTO_Y, PHOTO_W, PHOTO_H = 573, 681, 721, 735
-CLASS_X, CLASS_Y, CLASS_W, CLASS_H = 257, 1608, 647, 437
-STRENGTH_X, STRENGTH_Y, STRENGTH_W, STRENGTH_H = 971, 1607, 647, 437
-
-# Etiketterna "KLASS"/"MUSTACHSTYRKA" är inbrända högst upp i varje ruta —
-# värdet skrivs i den nedre delen så det inte överlappar etiketten.
-_LABEL_ZONE = 150
+PHOTO_X, PHOTO_Y, PHOTO_W, PHOTO_H = 428, 548, 1001, 1019
+SCORE_Y, SCORE_H = 1745, 276
+CLASS_X, CLASS_Y, CLASS_W, CLASS_H = 704, 1620, 462, 45
+IMAGE_CENTER_X = 920
+SHARE_FILL = (54, 88, 159)
 
 
-def create_share_image(photo, score, title, description="", template_path="assets/mall.png"):
+def _draw_score_block(draw, score_str, cx, cy, score_font, suffix_font, fill):
+    """Rita score + /100 som ett horisontellt centrerat block."""
+    gap = 20
+    sb = draw.textbbox((0, 0), score_str, font=score_font)
+    score_w, score_h = sb[2]-sb[0], sb[3]-sb[1]
+    fb = draw.textbbox((0, 0), "/100", font=suffix_font)
+    suffix_w, suffix_h = fb[2]-fb[0], fb[3]-fb[1]
+    total_w = score_w + gap + suffix_w
+    start_x = cx - total_w // 2
+    draw.text((start_x - sb[0], cy - score_h//2 - sb[1]), score_str, font=score_font, fill=fill)
+    suffix_x = start_x + score_w + gap
+    suffix_y = cy + score_h//2 - suffix_h - sb[1]
+    draw.text((suffix_x - fb[0], suffix_y - fb[1]), "/100", font=suffix_font, fill=fill)
+
+
+def create_share_image(photo, score, title, description="", template_path="assets/mall/mall.png"):
     """Klistrar in foto + klass + poäng i den färdigdesignade mallen.
 
     Returnerar None om mallen saknas, så anroparen kan visa ett snyggt
@@ -343,21 +372,14 @@ def create_share_image(photo, score, title, description="", template_path="asset
 
     draw = ImageDraw.Draw(canvas)
 
-    score_font = _load_font(130)
-    title_font = _load_font(95)
+    score_str = f"{score:.0f}"
+    score_size = 300 if len(score_str) == 3 else 360
+    suffix_size = score_size // 3
+    cy = SCORE_Y + SCORE_H // 2
 
     title_text = _strip_emoji(title)
-
-    _draw_centered_text(
-        draw, title_text,
-        (CLASS_X, CLASS_Y + _LABEL_ZONE, CLASS_W, CLASS_H - _LABEL_ZONE),
-        title_font, "#1c3f60"
-    )
-    _draw_centered_text(
-        draw, f"{score:.0f} / 100",
-        (STRENGTH_X, STRENGTH_Y + _LABEL_ZONE - 15, STRENGTH_W, STRENGTH_H - _LABEL_ZONE),
-        score_font, "#1c3f60"
-    )
+    _draw_centered_text(draw, title_text, (CLASS_X, CLASS_Y, CLASS_W, CLASS_H), _load_title_font(76), SHARE_FILL)
+    _draw_score_block(draw, score_str, IMAGE_CENTER_X, cy, _load_font(score_size), _load_font(suffix_size), SHARE_FILL)
 
     return canvas.convert("RGB")
 
