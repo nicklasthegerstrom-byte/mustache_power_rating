@@ -442,7 +442,7 @@ if uploaded_file is not None:
     print(f"[LOGG] Bild mottagen: {uploaded_file.name}, {uploaded_file.size} bytes, storlek {image.size}", flush=True)
 
     with main_card:
-        left_col, right_col = st.columns([1, 1])
+        left_col, right_col = st.columns([2, 1])
         left_slot = left_col.empty()
         right_slot = right_col.empty()
 
@@ -534,8 +534,16 @@ if uploaded_file is not None:
 
             # HÖGER: byt ut knapp/mätare mot titel + nedladdning
             with right_slot.container():
-                st.subheader(title)
-                st.write(description)
+                st.markdown(
+                    f"<p style='font-family: FalstaffMTStd, serif; font-size: 1.4rem; "
+                    f"color: #365899; margin-bottom: 0.25rem;'>{title}</p>",
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    f"<p style='font-family: \"Gotham Medium\", sans-serif; font-size: 0.9rem; "
+                    f"color: #444; margin-top: 0;'>{description}</p>",
+                    unsafe_allow_html=True
+                )
 
                 if share_image is not None:
                     buf = io.BytesIO()
@@ -546,7 +554,6 @@ if uploaded_file is not None:
                         data=buf,
                         file_name="mustaschkraft.png",
                         mime="image/png",
-                        width="stretch",
                         key="download_button"
                     )
 

@@ -1,5 +1,23 @@
 /* Mustaschkraft — svart/vit/guld-tema */
 
+@font-face {
+    font-family: 'Falstaff';
+    src: url('app/static/fonts/FalstaffMTStd.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Gotham Medium';
+    src: url('app/static/fonts/Gotham Medium.otf') format('opentype');
+}
+
+body, p, div, span, label, input {
+    font-family: 'Gotham Medium', sans-serif;
+}
+
+h1, h2, h3 {
+    font-family: 'Falstaff', serif;
+}
+
 [data-testid="stAppViewContainer"],
 [data-testid="stHeader"],
 [data-testid="stMain"] {
