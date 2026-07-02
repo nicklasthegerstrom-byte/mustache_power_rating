@@ -12,6 +12,8 @@ from pillow_heif import register_heif_opener
 
 register_heif_opener()  # gör att Image.open() också klarar .heic (iPhone-kamerafoton)
 
+DEBUG_MODE = os.environ.get("MUSTASCH_DEBUG") == "1"
+
 mtcnn = MTCNN(image_size=178, margin=40, post_process=False)
 
 # Separat MTCNN-instans för ansiktsigenkänning (blocklista) — FaceNet förväntar
@@ -558,14 +560,15 @@ if uploaded_file is not None:
                     )
 
             with extra_area.container():
-                st.write("mustasch_sannolikhet:", mustache_prob)
-                st.write("p_episk:", p_epic)
-                st.write("p_respektabel:", p_medium)
-                st.write("p_tunn:", p_thin)
-                st.write("mustaschkraft_poäng:", epic_score)
-
                 if video_file and os.path.exists(video_file):
                     st.video(video_file)
+
+                if DEBUG_MODE:
+                    st.write("mustasch_sannolikhet:", mustache_prob)
+                    st.write("p_episk:", p_epic)
+                    st.write("p_respektabel:", p_medium)
+                    st.write("p_tunn:", p_thin)
+                    st.write("mustaschkraft_poäng:", epic_score)
 
                 st.divider()
                 st.markdown(
