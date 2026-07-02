@@ -12,7 +12,7 @@ from pillow_heif import register_heif_opener
 
 register_heif_opener()  # gör att Image.open() också klarar .heic (iPhone-kamerafoton)
 
-DEBUG_MODE = os.environ.get("MUSTASCH_DEBUG") == "1"
+DEBUG_MODE = os.environ.get("MUSTASCH_DEBUG") != "0"
 
 mtcnn = MTCNN(image_size=178, margin=40, post_process=False)
 
