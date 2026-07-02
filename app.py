@@ -223,35 +223,35 @@ def prepare_image(image):
 def classify_epicness(score):
     if score >= 95:
         return (
-            "🏆 Legendarisk",
+            "🏆 Legendarisk mustasch",
             "Våra experter är mållösa. Mustaschen föreslås statligt kulturarvsskydd.",
             "assets/abbe/video/legendarisk.mp4"
         )
 
     elif score >= 80:
         return (
-            "🔥 Episk",
+            "🔥 Episk mustasch",
             "En mustasch med styrka. Kraft. Själ.",
             "assets/abbe/video/episk.mp4"
         )
 
     elif score >= 60:
         return (
-            "🎩 Respektabel",
+            "🎩 Respektabel mustasch",
             "En värdig representant för svensk mustaschkultur.",
             "assets/abbe/video/respektabel.mp4"
         )
 
     elif score >= 25:
         return (
-            "🌱 Lovande",
+            "🌱 Lovande mustasch",
             "Ett litet steg för överläppen. Ett stort steg för mänskligheten.",
             "assets/abbe/video/lovande.mp4"
         )
 
     else:
         return (
-            "🪶 Fjunig",
+            "🪶 Fjunig mustasch",
             "Mustaschen existerar mest som ett teoretiskt koncept.",
             "assets/abbe/video/fjunig.mp4"
         )
@@ -354,6 +354,19 @@ def _draw_score_block(draw, score_str, cx, cy, score_font, suffix_font, fill):
     draw.text((suffix_x - fb[0], suffix_y - fb[1]), "/100", font=suffix_font, fill=fill)
 
 
+def _draw_class_text(draw, text, cx, cy, max_w, fill, max_size=76):
+    """Rita klasstexter centrerad på (cx, cy), krymper om texten är för lång."""
+    font_path = "assets/fonts/FalstaffMTStd.otf"
+    for size in range(max_size, 20, -2):
+        try: font = ImageFont.truetype(font_path, size)
+        except: font = ImageFont.load_default()
+        bbox = draw.textbbox((0, 0), text, font=font)
+        if bbox[2] - bbox[0] <= max_w:
+            text_w, text_h = bbox[2]-bbox[0], bbox[3]-bbox[1]
+            draw.text((cx - text_w//2 - bbox[0], cy - text_h//2 - bbox[1]), text, font=font, fill=fill)
+            return
+
+
 def create_share_image(photo, score, title, description="", template_path="assets/mall/mall.png"):
     """Klistrar in foto + klass + poäng i den färdigdesignade mallen.
 
@@ -377,8 +390,8 @@ def create_share_image(photo, score, title, description="", template_path="asset
     suffix_size = score_size // 3
     cy = SCORE_Y + SCORE_H // 2
 
-    title_text = _strip_emoji(title)
-    _draw_centered_text(draw, title_text, (CLASS_X, CLASS_Y, CLASS_W, CLASS_H), _load_title_font(76), SHARE_FILL)
+    title_text = _strip_emoji(title).upper()
+    _draw_class_text(draw, title_text, IMAGE_CENTER_X, CLASS_Y + CLASS_H // 2, PHOTO_W, SHARE_FILL, max_size=76)
     _draw_score_block(draw, score_str, IMAGE_CENTER_X, cy, _load_font(score_size), _load_font(suffix_size), SHARE_FILL)
 
     return canvas.convert("RGB")
