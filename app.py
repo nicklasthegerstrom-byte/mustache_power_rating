@@ -160,9 +160,8 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
     p_max = max(p_epic, p_medium, p_thin)
 
     if p_max < 0.40:
-        # Praktiskt taget jämnt delat (nära 1/3 var) — modellen har ingen
-        # riktig åsikt. Straffa inte total osäkerhet som om det var ett
-        # dåligt resultat.
+        if p_thin == p_max:
+            return 20.0
         return 40.0
 
     if p_thin == p_max:
@@ -467,7 +466,7 @@ if uploaded_file is not None:
 
         with right_slot.container():
             st.markdown("<br><br>", unsafe_allow_html=True)
-            analyze = st.button("🔬 Starta analys", width="stretch", key="analyze_button")
+            analyze = st.button("Starta analys", width="stretch", key="analyze_button")
 
         extra_area = st.empty()
 
@@ -545,39 +544,19 @@ if uploaded_file is not None:
             with extra_area.container():
                 FALSTAFF = "Falstaff, serif"
                 GOTHAM = "'Gotham Medium', sans-serif"
-                col_klass, col_score = st.columns(2)
-                with col_klass:
-                    st.markdown(
-                        f"<p style='font-family: {FALSTAFF}; font-size: 2rem; color: #365899; margin-bottom: 0;'>{title}</p>"
-                        f"<small style='font-family: {GOTHAM}; color: #444; font-size: 11px; display: block; margin-top: 0;'>{description}</small>",
-                        unsafe_allow_html=True
-                    )
-                with col_score:
-                    st.markdown(
-                        f"<p style='font-family: {FALSTAFF}; color: #444; font-size: 0.85rem; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px;'>Mustaschstyrka</p>"
-                        f"<p style='font-family: {FALSTAFF}; font-size: 2.5rem; color: #365899; margin-top: 0;'>{epic_score:.0f} / 100</p>",
-                        unsafe_allow_html=True
-                    )
                 if video_file and os.path.exists(video_file):
-                    st.markdown("<br>", unsafe_allow_html=True)
                     st.video(video_file)
+                st.markdown(
+                    f"<p style='font-family: {FALSTAFF}; font-size: 2rem; color: #365899; margin-bottom: 0; text-align: center;'>{title}</p>"
+                    f"<p style='font-family: Montserrat, sans-serif; font-size: 1.4rem; color: #444; margin: 4px 0 6px 0; text-align: center;'>Mustaschstyrka: {epic_score:.0f} / 100</p>"
+                    f"<div class='mustasch-desc'>{description}</div>",
+                    unsafe_allow_html=True
+                )
                 if share_image is not None:
-                    buf = io.BytesIO()
-                    share_image.save(buf, format="PNG")
-                    buf.seek(0)
+                    st.markdown("<br>", unsafe_allow_html=True)
                     _, cert_col, _ = st.columns([1, 3, 1])
                     with cert_col:
                         st.image(share_image, use_container_width=True)
-                        _, btn_col, _ = st.columns([1, 2, 1])
-                        with btn_col:
-                            st.download_button(
-                                "⬇️ Ladda ner certifikat",
-                                data=buf,
-                                file_name="mustaschkraft.png",
-                                mime="image/png",
-                                key="download_button",
-                                use_container_width=True
-                            )
                 if DEBUG_MODE:
                     st.write("mustasch_sannolikhet:", mustache_prob)
                     st.write("p_episk:", p_epic)
@@ -595,3 +574,11 @@ if uploaded_file is not None:
                 )
 
                 print("[LOGG] Analys klar, resultat visat.", flush=True)
+
+st.markdown(
+    "<p style='font-family: Montserrat, sans-serif; text-align: center; color: #555; font-size: 0.9rem; margin-top: 2rem;'>"
+    "Swisha ditt bidrag till <strong style='color: #1a1a1a;'>900 10 17</strong>.<br>"
+    "Alla gåvor är välkomna, varje krona gör skillnad i kampen mot Sveriges vanligaste cancersjukdom."
+    "</p>",
+    unsafe_allow_html=True
+)

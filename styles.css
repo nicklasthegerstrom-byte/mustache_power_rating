@@ -21,7 +21,7 @@ h1, h2, h3 {
 [data-testid="stAppViewContainer"],
 [data-testid="stHeader"],
 [data-testid="stMain"] {
-    background-color: #0d0d0d;
+    background-color: #f5f5f5;
 }
 
 /* Riktar mot den namngivna containern via st.container(key="main_card") —
@@ -38,39 +38,49 @@ h1, h2, h3 {
     color: #1a1a1a;
 }
 
-/* Ljusblå knappar — riktade via st.button/st.download_button/st.file_uploader(key="...") */
+.mustasch-desc {
+    font-family: 'Gotham Medium', sans-serif !important;
+    font-size: 13px !important;
+    color: #444 !important;
+    text-align: center !important;
+    margin: 0 !important;
+}
+
+/* Knappar — matchar mustaschkampen.se: solid mörkblå, pill-form */
 .st-key-analyze_button button,
 .st-key-download_button button,
 .st-key-file_uploader button {
-    background: linear-gradient(160deg, #6ec2e8, #3f8fc4);
+    background-color: #1b46b4;
     color: #ffffff !important;
-    font-weight: 700;
+    font-family: 'Gotham Medium', sans-serif;
+    font-weight: 400;
     border: none;
-    border-bottom: 3px solid #2c6f9c;
     border-radius: 50px;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.5),
-        inset 0 -3px 6px rgba(0, 0, 0, 0.15),
-        0 4px 10px rgba(0, 0, 0, 0.3);
-    transition: all 0.15s ease;
+    padding: 12px 28px;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+    box-shadow: none;
+    transition: background-color 0.15s ease;
 }
 
 .st-key-analyze_button button:hover,
 .st-key-download_button button:hover,
 .st-key-file_uploader button:hover {
-    background: linear-gradient(160deg, #7fcaf0, #4a9ed1);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.6),
-        inset 0 -3px 6px rgba(0, 0, 0, 0.15),
-        0 6px 14px rgba(0, 0, 0, 0.35);
-    transform: translateY(-2px);
+    background-color: #1640a0;
 }
 
 .st-key-analyze_button button:active,
 .st-key-download_button button:active,
 .st-key-file_uploader button:active {
-    transform: translateY(1px);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.3),
-        inset 0 2px 4px rgba(0, 0, 0, 0.25);
+    background-color: #123890;
+}
+
+/* Säkerställ vit text i alla knappelement */
+.st-key-analyze_button button p,
+.st-key-analyze_button button span,
+.st-key-download_button button p,
+.st-key-download_button button span,
+.st-key-file_uploader button p,
+.st-key-file_uploader button span {
+    color: #ffffff !important;
 }
