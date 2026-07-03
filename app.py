@@ -121,11 +121,27 @@ with st.spinner("🥸 Mustaschinstrument laddas..."):
 
 main_card = st.container(border=True, key="main_card")
 with main_card:
-    uploaded_file = st.file_uploader(
-        "Skicka in provet för analys",
-        type=["jpg", "jpeg", "png", "heic", "heif"],
-        key="file_uploader"
-    )
+    upl_col, info_col = st.columns([10, 1])
+    with upl_col:
+        uploaded_file = st.file_uploader(
+            "Skicka in provet för analys",
+            type=["jpg", "jpeg", "png", "heic", "heif"],
+            key="file_uploader"
+        )
+    with info_col:
+        st.write("")
+        with st.popover("ℹ️"):
+            st.markdown(
+                "<p style='font-size:0.75rem; margin:0;'>"
+                "<strong>Tips för bästa resultat</strong><br>"
+                "Ta bilden rakt framifrån<br>"
+                "Håll munnen stängd<br>"
+                "Se till att ha bra belysning<br>"
+                "Se till att mustaschen syns tydligt<br>"
+                "Undvik motion blur eller oskärpa"
+                "</p>",
+                unsafe_allow_html=True
+            )
 
 # --------------------------------------------------
 # Helpers
@@ -150,7 +166,7 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
         return 40.0
 
     if p_thin == p_max:
-        score = p_thin * 8 + p_epic * 100 + p_medium * 50
+        score = p_thin * 7 + p_epic * 100 + p_medium * 50
         if p_max < 0.7:
             score *= 0.92  # generöst — appen ska vara kul att dela, inte sträng
     else:
@@ -164,8 +180,6 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
             if epic_medium_sum > 0 else 100
         )
         score = (p_epic ** 1.1) * 100 + p_medium * 75 - p_thin * effective_anchor * 0.5
-        if p_thin > 0.05:
-            score *= 0.92
 
     score = float(np.clip(score, 0, 100))
 
@@ -225,35 +239,35 @@ def prepare_image(image):
 def classify_epicness(score):
     if score >= 95:
         return (
-            "🏆 Legendarisk mustasch",
+            "🏆 En legendarisk mustasch",
             "Våra experter är mållösa. Mustaschen föreslås statligt kulturarvsskydd.",
             "assets/abbe/video/legendarisk.mp4"
         )
 
     elif score >= 80:
         return (
-            "🔥 Episk mustasch",
+            "🔥 En episk mustasch",
             "En mustasch med styrka. Kraft. Själ.",
             "assets/abbe/video/episk.mp4"
         )
 
     elif score >= 60:
         return (
-            "🎩 Respektabel mustasch",
+            "🎩 En respektabel mustasch",
             "En värdig representant för svensk mustaschkultur.",
             "assets/abbe/video/respektabel.mp4"
         )
 
     elif score >= 25:
         return (
-            "🌱 Lovande mustasch",
+            "🌱 En lovande mustasch",
             "Ett litet steg för överläppen. Ett stort steg för mänskligheten.",
             "assets/abbe/video/lovande.mp4"
         )
 
     else:
         return (
-            "🪶 Fjunig mustasch",
+            "🪶 En fjunig mustasch",
             "Mustaschen existerar mest som ett teoretiskt koncept.",
             "assets/abbe/video/fjunig.mp4"
         )
@@ -444,7 +458,7 @@ if uploaded_file is not None:
     print(f"[LOGG] Bild mottagen: {uploaded_file.name}, {uploaded_file.size} bytes, storlek {image.size}", flush=True)
 
     with main_card:
-        left_col, right_col = st.columns([2, 1])
+        left_col, right_col = st.columns([1, 1])
         left_slot = left_col.empty()
         right_slot = right_col.empty()
 
@@ -455,7 +469,7 @@ if uploaded_file is not None:
             st.markdown("<br><br>", unsafe_allow_html=True)
             analyze = st.button("🔬 Starta analys", width="stretch", key="analyze_button")
 
-        extra_area = st.empty()  # video/debug-info/footer, fylls efter analys
+        extra_area = st.empty()
 
         if analyze:
             print("[LOGG] Analys startad.", flush=True)
@@ -494,9 +508,7 @@ if uploaded_file is not None:
             print(f"[LOGG] mustache_model klar: mustache_prob={mustache_prob:.4f}", flush=True)
 
             if mustache_prob < 0.4:
-                # Inget upptäckt mustasch — räknas som 0/100, inte ett avslag.
-                # Det är ändå ett ansikte, så det ska få en poäng som alla andra.
-                p_epic, p_medium, p_thin = 0.0, 0.0, 1.0
+                p_epic, p_medium, p_thin = 0.0, 0.0, 0.0
                 epic_score = 0.0
                 title, description, video_file = "🚫 Mustaschlös", (
                     "Överläppen verkar för närvarande sakna "
@@ -526,43 +538,46 @@ if uploaded_file is not None:
             share_image = create_share_image(image, epic_score, title, description)
             print(f"[LOGG] Delningsbild klar: {'OK' if share_image is not None else 'MISSLYCKADES'}", flush=True)
 
-            # VÄNSTER: bytut foto mot resultatbilden
-            with left_slot.container():
-                if share_image is not None:
-                    st.image(share_image, width="stretch")
-                else:
-                    st.warning("⚠️ Kunde inte generera delningsbild (mallen saknas).")
-                    st.image(image, caption="Inskickat prov", width="stretch")
+            # Göm sidokolumnerna, visa allt i extra_area (full bredd)
+            left_slot.empty()
+            right_slot.empty()
 
-            # HÖGER: byt ut knapp/mätare mot titel + nedladdning
-            with right_slot.container():
-                st.markdown(
-                    f"<p style='font-family: FalstaffMTStd, serif; font-size: 1.4rem; "
-                    f"color: #365899; margin-bottom: 0.25rem;'>{title}</p>",
-                    unsafe_allow_html=True
-                )
-                st.markdown(
-                    f"<p style='font-family: \"Gotham Medium\", sans-serif; font-size: 0.9rem; "
-                    f"color: #444; margin-top: 0;'>{description}</p>",
-                    unsafe_allow_html=True
-                )
-
+            with extra_area.container():
+                FALSTAFF = "Falstaff, serif"
+                GOTHAM = "'Gotham Medium', sans-serif"
+                col_klass, col_score = st.columns(2)
+                with col_klass:
+                    st.markdown(
+                        f"<p style='font-family: {FALSTAFF}; font-size: 2rem; color: #365899; margin-bottom: 0;'>{title}</p>"
+                        f"<small style='font-family: {GOTHAM}; color: #444; font-size: 11px; display: block; margin-top: 0;'>{description}</small>",
+                        unsafe_allow_html=True
+                    )
+                with col_score:
+                    st.markdown(
+                        f"<p style='font-family: {FALSTAFF}; color: #444; font-size: 0.85rem; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px;'>Mustaschstyrka</p>"
+                        f"<p style='font-family: {FALSTAFF}; font-size: 2.5rem; color: #365899; margin-top: 0;'>{epic_score:.0f} / 100</p>",
+                        unsafe_allow_html=True
+                    )
+                if video_file and os.path.exists(video_file):
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.video(video_file)
                 if share_image is not None:
                     buf = io.BytesIO()
                     share_image.save(buf, format="PNG")
                     buf.seek(0)
-                    st.download_button(
-                        "⬇️ Ladda ner certifikat",
-                        data=buf,
-                        file_name="mustaschkraft.png",
-                        mime="image/png",
-                        key="download_button"
-                    )
-
-            with extra_area.container():
-                if video_file and os.path.exists(video_file):
-                    st.video(video_file)
-
+                    _, cert_col, _ = st.columns([1, 3, 1])
+                    with cert_col:
+                        st.image(share_image, use_container_width=True)
+                        _, btn_col, _ = st.columns([1, 2, 1])
+                        with btn_col:
+                            st.download_button(
+                                "⬇️ Ladda ner certifikat",
+                                data=buf,
+                                file_name="mustaschkraft.png",
+                                mime="image/png",
+                                key="download_button",
+                                use_container_width=True
+                            )
                 if DEBUG_MODE:
                     st.write("mustasch_sannolikhet:", mustache_prob)
                     st.write("p_episk:", p_epic)

@@ -15,7 +15,7 @@ body, p, div, span, label, input {
 }
 
 h1, h2, h3 {
-    font-family: 'Falstaff', serif;
+    font-family: 'Falstaff', serif !important;
 }
 
 [data-testid="stAppViewContainer"],
