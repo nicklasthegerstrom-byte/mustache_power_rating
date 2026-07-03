@@ -358,7 +358,7 @@ def _draw_score_block(draw, score_str, cx, cy, score_font, suffix_font, fill):
 
 def _draw_class_text(draw, text, cx, cy, max_w, fill, max_size=76):
     """Rita klasstexter centrerad på (cx, cy), krymper om texten är för lång."""
-    font_path = "assets/fonts/FalstaffMTStd.otf"
+    font_path = "assets/fonts/Gotham Bold.otf"
     for size in range(max_size, 20, -2):
         try: font = ImageFont.truetype(font_path, size)
         except: font = ImageFont.load_default()
