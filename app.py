@@ -175,10 +175,10 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
         # för att alltid anta att motparten var en fullvärdig epic-claim.
         epic_medium_sum = p_epic + p_medium
         effective_anchor = (
-            (p_epic * 100 + p_medium * 75) / epic_medium_sum
+            (p_epic * 100 + p_medium * 65) / epic_medium_sum
             if epic_medium_sum > 0 else 100
         )
-        score = (p_epic ** 1.1) * 100 + p_medium * 75 - p_thin * effective_anchor * 0.5
+        score = (p_epic ** 1.1) * 100 + p_medium * 65 - p_thin * effective_anchor * 0.5
 
     score = float(np.clip(score, 0, 100))
 
