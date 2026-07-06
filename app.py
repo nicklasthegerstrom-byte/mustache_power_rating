@@ -14,6 +14,8 @@ register_heif_opener()  # gör att Image.open() också klarar .heic (iPhone-kame
 
 DEBUG_MODE = os.environ.get("MUSTASCH_DEBUG") != "0"
 
+MODEL_CLASSES = 4  # byt till 3 för 3-klassmodellen
+
 mtcnn = MTCNN(image_size=178, margin=40, post_process=False)
 
 # Separat MTCNN-instans för ansiktsigenkänning (blocklista) — FaceNet förväntar
@@ -46,9 +48,14 @@ def load_models():
     mustache_model = tf.keras.models.load_model(
         "models/mustache_detector_3.keras"
     )
-    epic_model = tf.keras.models.load_model(
-        "models/epic_detector_3class_test.keras"
-    )
+    if MODEL_CLASSES == 4:
+        epic_model = tf.keras.models.load_model(
+            "models/epic_detector_4class_1.keras"
+        )
+    else:
+        epic_model = tf.keras.models.load_model(
+            "models/epic_detector_3class_test.keras"
+        )
     return mustache_model, epic_model
 
 
@@ -89,9 +96,8 @@ def load_blocklist_embeddings():
     return embeddings
 
 
-# Ordningen image_dataset_from_directory sorterar mappar alfabetiskt:
-# epic, medium, thin
-CLASS_NAMES = ["epic", "medium", "thin"]
+# Ordningen image_dataset_from_directory sorterar mappar alfabetiskt.
+CLASS_NAMES = ["epic", "medium", "medium_thin", "thin"] if MODEL_CLASSES == 4 else ["epic", "medium", "thin"]
 
 # --------------------------------------------------
 # Constants
@@ -186,6 +192,13 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
     # rör knappt redan-säkra extremfall (0 och 100 påverkas inte).
     score = 100 * (score / 100) ** 0.85
 
+    return float(np.clip(score, 0, 100))
+
+
+def weighted_epic_score_4class(p_epic, p_medium, p_medium_thin, p_thin):
+    if p_epic >= 0.99:
+        return 100.0
+    score = p_epic * 95 + p_medium * 80 + p_medium_thin * 50 + p_thin * 15
     return float(np.clip(score, 0, 100))
 
 
@@ -507,7 +520,7 @@ if uploaded_file is not None:
             print(f"[LOGG] mustache_model klar: mustache_prob={mustache_prob:.4f}", flush=True)
 
             if mustache_prob < 0.4:
-                p_epic, p_medium, p_thin = 0.0, 0.0, 0.0
+                p_epic, p_medium, p_medium_thin, p_thin = 0.0, 0.0, 0.0, 0.0
                 epic_score = 0.0
                 title, description, video_file = "🚫 Mustaschlös", (
                     "Överläppen verkar för närvarande sakna "
@@ -516,21 +529,21 @@ if uploaded_file is not None:
             else:
                 print("[LOGG] Kör epic_model.predict...", flush=True)
                 preds = epic_model.predict(img_array, verbose=0)[0]
-                p_epic, p_medium, p_thin = float(preds[0]), float(preds[1]), float(preds[2])
-                print(f"[LOGG] epic_model klar: p_epic={p_epic:.4f}, p_medium={p_medium:.4f}, p_thin={p_thin:.4f}", flush=True)
 
-                # 0.99+ räknas som "perfekt" vid POÄNGBERÄKNINGEN — annars krävs
-                # bokstavligt exakt 1.0, vilket en försiktigare modell sällan/
-                # aldrig ger. p_epic/p_medium/p_thin (visas i debug-panelen)
-                # förblir modellens riktiga, oklampade output.
-                epic_for_score, medium_for_score, thin_for_score = p_epic, p_medium, p_thin
-                if p_epic >= 0.99:
-                    epic_for_score, medium_for_score, thin_for_score = 1.0, 0.0, 0.0
+                if MODEL_CLASSES == 4:
+                    p_epic, p_medium, p_medium_thin, p_thin = float(preds[0]), float(preds[1]), float(preds[2]), float(preds[3])
+                    print(f"[LOGG] epic_model klar: p_epic={p_epic:.4f}, p_medium={p_medium:.4f}, p_medium_thin={p_medium_thin:.4f}, p_thin={p_thin:.4f}", flush=True)
+                    epic_score = weighted_epic_score_4class(p_epic, p_medium, p_medium_thin, p_thin)
+                else:
+                    p_epic, p_medium, p_medium_thin, p_thin = float(preds[0]), float(preds[1]), 0.0, float(preds[2])
+                    print(f"[LOGG] epic_model klar: p_epic={p_epic:.4f}, p_medium={p_medium:.4f}, p_thin={p_thin:.4f}", flush=True)
+                    epic_for_score, medium_for_score, thin_for_score = p_epic, p_medium, p_thin
+                    if p_epic >= 0.99:
+                        epic_for_score, medium_for_score, thin_for_score = 1.0, 0.0, 0.0
+                    epic_score = weighted_epic_score(epic_for_score, medium_for_score, thin_for_score)
+                    epic_score = compress_top_end(epic_score)
 
-                epic_score = weighted_epic_score(epic_for_score, medium_for_score, thin_for_score)
-                epic_score = compress_top_end(epic_score)
                 print(f"[LOGG] Poäng beräknad: {epic_score:.2f}", flush=True)
-
                 title, description, video_file = classify_epicness(epic_score)
 
             print("[LOGG] Genererar delningsbild...", flush=True)
@@ -561,6 +574,8 @@ if uploaded_file is not None:
                     st.write("mustasch_sannolikhet:", mustache_prob)
                     st.write("p_episk:", p_epic)
                     st.write("p_respektabel:", p_medium)
+                    if MODEL_CLASSES == 4:
+                        st.write("p_lovande:", p_medium_thin)
                     st.write("p_tunn:", p_thin)
                     st.write("mustaschkraft_poäng:", epic_score)
 
