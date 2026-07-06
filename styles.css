@@ -28,7 +28,7 @@ h1, h2, h3 {
    genererar klassen .st-key-main_card, stabilt oavsett Streamlit-version. */
 .st-key-main_card {
     background-color: #ffffff;
-    border-radius: 16px;
+    border-radius: 0px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     padding: 24px;
     border: none;

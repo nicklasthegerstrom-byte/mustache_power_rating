@@ -561,8 +561,8 @@ if uploaded_file is not None:
                     st.video(video_file)
                 st.markdown(
                     f"<p style='font-family: {FALSTAFF}; font-size: 2rem; color: #365899; margin-bottom: 0; text-align: center;'>{title}</p>"
-                    f"<p style='font-family: Montserrat, sans-serif; font-size: 1.4rem; color: #444; margin: 4px 0 6px 0; text-align: center;'>Mustaschstyrka: {epic_score:.0f} / 100</p>"
-                    f"<div class='mustasch-desc'>{description}</div>",
+                    f"<p style='font-family: {GOTHAM}; font-size: 1.4rem; color: #444; margin: 4px 0 6px 0; text-align: center;'>Mustaschstyrka: {epic_score:.0f} / 100</p>"
+                    f"<div class='mustasch-desc' style='font-family: {GOTHAM};'>{description}</div>",
                     unsafe_allow_html=True
                 )
                 if share_image is not None:
