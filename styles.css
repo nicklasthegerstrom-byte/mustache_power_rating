@@ -18,10 +18,17 @@ h1, h2, h3 {
     font-family: 'Falstaff', serif !important;
 }
 
-[data-testid="stAppViewContainer"],
+[data-testid="stAppViewContainer"] {
+    background-image: url('app/static/mall/bakgrund1.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
 [data-testid="stHeader"],
 [data-testid="stMain"] {
-    background-color: #f5f5f5;
+    background-color: transparent;
 }
 
 /* Riktar mot den namngivna containern via st.container(key="main_card") —

@@ -198,7 +198,8 @@ def weighted_epic_score(p_epic, p_medium, p_thin):
 def weighted_epic_score_4class(p_epic, p_medium, p_medium_thin, p_thin):
     if p_epic >= 0.99:
         return 100.0
-    score = p_epic * 95 + p_medium * 80 + p_medium_thin * 50 + p_thin * 15
+    thin_score = 10 + (1 - p_thin) * 10
+    score = p_epic * 95 + p_medium * 80 + p_medium_thin * 50 + p_thin * thin_score
     return float(np.clip(score, 0, 100))
 
 
@@ -281,7 +282,7 @@ def classify_epicness(score):
         return (
             "🪶 En fjunig mustasch",
             "Mustaschen existerar mest som ett teoretiskt koncept.",
-            "assets/abbe/video/fjunig.mp4"
+            "assets/abbe/video/fjunig1.mp4"
         )
 
 
@@ -525,7 +526,7 @@ if uploaded_file is not None:
                 title, description, video_file = "🚫 Mustaschlös", (
                     "Överläppen verkar för närvarande sakna "
                     "tillräcklig auktoritet."
-                ), "assets/abbe/video/ingen.mp4"
+                ), "assets/abbe/video/ingen_1.mp4"
             else:
                 print("[LOGG] Kör epic_model.predict...", flush=True)
                 preds = epic_model.predict(img_array, verbose=0)[0]
