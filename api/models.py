@@ -8,11 +8,14 @@ mtcnn_face = MTCNN(image_size=160, margin=0, post_process=True)
 facenet = InceptionResnetV1(pretrained="vggface2").eval()
 
 mustache_model = tf.keras.models.load_model("models/mustache_detector_3.keras")
-epic_model = tf.keras.models.load_model("models/epic_detector_3class_test.keras")
+epic_model = tf.keras.models.load_model("models/epic_detector_4class_1.keras")
 
 
 def prepare_image(image: Image.Image):
     image = image.convert("RGB")
+    max_dim = 1200
+    if max(image.size) > max_dim:
+        image.thumbnail((max_dim, max_dim), Image.LANCZOS)
     face = mtcnn(image)
     if face is None:
         return None
@@ -30,12 +33,13 @@ def predict(image: Image.Image):
         return {"mustache": False, "mustache_prob": mustache_prob}
 
     preds = epic_model.predict(img_array, verbose=0)[0]
-    p_epic, p_medium, p_thin = float(preds[0]), float(preds[1]), float(preds[2])
+    p_epic, p_medium, p_medium_thin, p_thin = float(preds[0]), float(preds[1]), float(preds[2]), float(preds[3])
 
     return {
         "mustache": True,
         "mustache_prob": mustache_prob,
         "p_epic": p_epic,
         "p_medium": p_medium,
+        "p_medium_thin": p_medium_thin,
         "p_thin": p_thin,
     }
