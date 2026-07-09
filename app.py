@@ -313,23 +313,6 @@ def _load_font(size):
     return ImageFont.load_default()
 
 
-def _load_title_font(size):
-    candidates = [
-        "assets/fonts/Gotham Medium.otf",
-        "assets/fonts/Akzidenz-grotesk-black.ttf",
-        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
-        "/System/Library/Fonts/Helvetica.ttc",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-    ]
-    for path in candidates:
-        if os.path.exists(path):
-            try:
-                return ImageFont.truetype(path, size)
-            except Exception:
-                continue
-    return ImageFont.load_default()
-
-
 def _cover_crop(img, target_w, target_h):
     """Beskär bilden centrerat så den fyller målstorleken utan att förvrängas."""
     img_ratio = img.width / img.height
@@ -345,26 +328,6 @@ def _cover_crop(img, target_w, target_h):
         img = img.crop((0, top, img.width, top + new_height))
 
     return img.resize((target_w, target_h))
-
-
-def _draw_centered_text(draw, text, box, font, fill):
-    x, y, w, h = box
-    bbox = draw.textbbox((0, 0), text, font=font)
-    text_w = bbox[2] - bbox[0]
-    text_h = bbox[3] - bbox[1]
-    pos_x = x + (w - text_w) // 2 - bbox[0]
-    pos_y = y + (h - text_h) // 2 - bbox[1]
-    draw.text((pos_x, pos_y), text, font=font, fill=fill)
-
-
-def _draw_right_aligned_text(draw, text, box, font, fill):
-    x, y, w, h = box
-    bbox = draw.textbbox((0, 0), text, font=font)
-    text_w = bbox[2] - bbox[0]
-    text_h = bbox[3] - bbox[1]
-    pos_x = x + w - text_w - bbox[0]
-    pos_y = y + (h - text_h) // 2 - bbox[1]
-    draw.text((pos_x, pos_y), text, font=font, fill=fill)
 
 
 def _strip_emoji(text):
@@ -572,7 +535,7 @@ if uploaded_file is not None:
                     st.video(video_file)
                 st.markdown(
                     f"<p style='font-family: {FALSTAFF}; font-size: 2rem; color: #365899; margin-bottom: 0; text-align: center;'>{title}</p>"
-                    f'<p style="font-family: Gotham Medium, sans-serif; font-size: 1.6rem; color: #444; margin: 4px 0 6px 0; text-align: center;">Mustaschstyrka: {epic_score:.0f} / 100</p>'
+                    f'<p style="font-family: Gotham Bold, sans-serif; font-size: 1.6rem; color: #444; margin: 4px 0 6px 0; text-align: center;">Mustaschstyrka: {epic_score:.0f} / 100</p>'
                     f"<div class='mustasch-desc' style='font-family: {GOTHAM};'>{description}</div>",
                     unsafe_allow_html=True
                 )

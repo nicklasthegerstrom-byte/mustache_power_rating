@@ -10,6 +10,11 @@
     src: url('app/static/fonts/Gotham Medium.otf') format('opentype');
 }
 
+@font-face {
+    font-family: 'Gotham Bold';
+    src: url('app/static/fonts/Gotham Bold.otf') format('opentype');
+}
+
 body, p, div, span, label, input {
     font-family: 'Gotham Medium', sans-serif;
 }
@@ -29,6 +34,10 @@ h1, h2, h3 {
 [data-testid="stHeader"],
 [data-testid="stMain"] {
     background-color: transparent;
+}
+
+[data-testid="stMain"] .block-container {
+    padding-top: 1rem !important;
 }
 
 /* Riktar mot den namngivna containern via st.container(key="main_card") —
