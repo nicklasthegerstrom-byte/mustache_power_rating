@@ -111,7 +111,7 @@ IMG_SIZE = (178, 178)
 
 _, logo_col, _ = st.columns([1, 2, 1])
 with logo_col:
-    st.image("assets/logo.png", width=600)
+    st.image("assets/logo1.png", width=600)
 
 
 st.warning("🧪 TESTVERSION — 3-klassmodell (episk/respektabel/tunn)", icon="🧪")
