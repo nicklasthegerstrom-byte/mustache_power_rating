@@ -219,7 +219,11 @@ def compress_top_end(score, floor=95.0, new_floor=85.0, gamma=2.5):
 
 def is_blocked(image, reference_embeddings, threshold=BLOCKLIST_THRESHOLD):
     """Jämför ett uppladdat ansikte mot blocklistans referensembeddings."""
-    face = mtcnn_face(image.convert("RGB"))
+    image = image.convert("RGB")
+    max_dim = 1200
+    if max(image.size) > max_dim:
+        image.thumbnail((max_dim, max_dim), Image.LANCZOS)
+    face = mtcnn_face(image)
     if face is None or not reference_embeddings:
         return False, 0.0
 
@@ -237,6 +241,11 @@ def is_blocked(image, reference_embeddings, threshold=BLOCKLIST_THRESHOLD):
 def prepare_image(image):
     """Returnerar None om inget ansikte hittas — ingen gissning på textur/bakgrund."""
     image = image.convert("RGB")
+
+    # Skala ner stora bilder innan MTCNN — annars hänger sig appen på högupplösta kamerabilder
+    max_dim = 1200
+    if max(image.size) > max_dim:
+        image.thumbnail((max_dim, max_dim), Image.LANCZOS)
 
     face = mtcnn(image)
 
