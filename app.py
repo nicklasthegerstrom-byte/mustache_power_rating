@@ -130,7 +130,7 @@ with main_card:
     upl_col, info_col = st.columns([10, 1])
     with upl_col:
         uploaded_file = st.file_uploader(
-            "Skicka in provet för analys",
+            "Skicka in provet för att analysera din mustaschstyrka",
             type=["jpg", "jpeg", "png", "heic", "heif"],
             key="file_uploader"
         )
@@ -141,10 +141,11 @@ with main_card:
                 "<p style='font-size:0.75rem; margin:0;'>"
                 "<strong>Tips för bästa resultat</strong><br>"
                 "Ta bilden rakt framifrån<br>"
+                "Hela ansiktet måste synas<br>"
                 "Håll munnen stängd<br>"
                 "Se till att ha bra belysning<br>"
                 "Se till att mustaschen syns tydligt<br>"
-                "Undvik motion blur eller oskärpa"
+                "Se till att bilden är skarp"
                 "</p>",
                 unsafe_allow_html=True
             )
