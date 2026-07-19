@@ -292,7 +292,7 @@ def classify_epicness(score):
         return (
             "🪶 En fjunig mustasch",
             "Mustaschen existerar mest som ett teoretiskt koncept.",
-            "assets/abbe/video/fjunig1.mp4"
+            "assets/abbe/video/fjunig.mp4"
         )
 
 
@@ -499,7 +499,7 @@ if uploaded_file is not None:
                 title, description, video_file = "🚫 Mustaschlös", (
                     "Överläppen verkar för närvarande sakna "
                     "tillräcklig auktoritet."
-                ), "assets/abbe/video/ingen_1.mp4"
+                ), "assets/abbe/video/ingen.mp4"
             else:
                 print("[LOGG] Kör epic_model.predict...", flush=True)
                 preds = epic_model.predict(img_array, verbose=0)[0]
